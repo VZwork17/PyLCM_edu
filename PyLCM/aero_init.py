@@ -1,13 +1,9 @@
+import numpy as np
 from PyLCM.parameters import *
 from PyLCM.micro_particle import *
-import numpy as np
 from PyLCM.parcel import *
 from PyLCM.condensation import *
 from Post_process.print_plot import *
-
-from scipy.stats import lognorm
-
-# def model_init(dt_widget, nt_widget, Condensation_widget, Collision_widget, n_particles_widget, T_widget, P_widget, RH_widget, w_widget, z_widget, max_z_widget, mode_aero_init_widget, gridwidget, ascending_mode_widget, mode_displaytype_widget, switch_kappa_koehler):
 
 def model_init(
         dt, nt, do_condensation, do_collision, n_particles, \
@@ -46,7 +42,9 @@ def model_init(
     
     # Further initialization
     dz=0
-    rho_parcel, V_parcel, air_mass_parcel =  parcel_rho(P_parcel, T_parcel)
+    rho_parcel, V_parcel =  parcel_rho(P_parcel, T_parcel)
+    wp_parcel = 0.0
+
     
     # Aerosol initialization
     T_parcel, q_parcel, particles_list = aero_init(mode_aero_init, n_particles, P_parcel,z_parcel, T_parcel,q_parcel, N_aero, mu_aero, sigma_aero, rho_aero, k_aero, switch_kappa_koehler)
@@ -77,7 +75,7 @@ def model_init(
     RH_parcel_array = np.zeros(nt+1)
     q_parcel_array  = np.zeros(nt+1)
     z_parcel_array  = np.zeros(nt+1)
-
+    wp_parcel_array = np.zeros(nt+1)
     P_parcel_array = np.zeros(nt+1)
 
     # Inserting the initialization values at the 0th position of the arrays.
@@ -85,7 +83,7 @@ def model_init(
     RH_parcel_array[0] = (q_parcel * P_parcel / (q_parcel + r_a / rv)) / esatw( T_parcel ) 
     q_parcel_array[0]  = q_parcel
     z_parcel_array[0]  = z_parcel
-
+    wp_parcel_array[0] = wp_parcel
     P_parcel_array[0] = P_parcel
 
     # Settings for the 'sine' and the 'in_cloud_oscillation' modes: time half wavelength of the parcel (s)
@@ -93,12 +91,11 @@ def model_init(
 
     S_lst = 0.0
     
-    return P_parcel, T_parcel, q_parcel, z_parcel, w_parcel, N_aero, mu_aero, sigma_aero, nt, dt, max_z, do_condensation, do_collision, ascending_mode, time_half_wave_parcel, S_lst, display_mode, qa_ts, qc_ts, qr_ts, na_ts, nc_ts, nr_ts, T_parcel_array, P_parcel_array, RH_parcel_array, q_parcel_array, z_parcel_array, particles_list, spectra_arr, con_ts, act_ts, evp_ts, dea_ts, acc_ts, aut_ts, precip_ts, particles_array, rc_liq_avg_array, rc_liq_std_array,n_particles, TAU_ts_array
+    return P_parcel, T_parcel, q_parcel, z_parcel, w_parcel, wp_parcel, N_aero, mu_aero, sigma_aero, nt, dt, max_z, do_condensation, do_collision, ascending_mode, time_half_wave_parcel, S_lst, display_mode, qa_ts, qc_ts, qr_ts, na_ts, nc_ts, nr_ts, T_parcel_array, P_parcel_array, RH_parcel_array, q_parcel_array, z_parcel_array, wp_parcel_array, particles_list, spectra_arr, con_ts, act_ts, evp_ts, dea_ts, acc_ts, aut_ts, precip_ts, particles_array, rc_liq_avg_array, rc_liq_std_array,n_particles, TAU_ts_array
 
 def aero_init(mode_aero_init, n_ptcl, P_parcel, z_parcel,T_parcel,q_parcel, N_aero, mu_aero,sigma_aero,rho_aero, k_aero, switch_kappa_koehler):
     
     # Aerosol initialization
-    rho_parcel, V_parcel, air_mass_parcel =  parcel_rho(P_parcel, T_parcel)
     
     particles_list = []
     # Computation of saturated water vapour pressure (e_s) and water vapour pressure of the parcel (e_a)

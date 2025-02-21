@@ -124,5 +124,4 @@ def create_env_profiles(T_init, qv_init,z_init,p_env, stability_condition):
     plt.title(stability_condition + " condition")
     plt.show()
 
-    
     return qv_profiles, theta_profiles, z_env

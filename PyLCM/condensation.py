@@ -1,12 +1,9 @@
+import math
 import numpy as np
 import sys
 from numba import jit
 from PyLCM.parameters import *
 from PyLCM.micro_particle import *
-from scipy.optimize import newton
-
-import math
-
 
 # Diffusional growth of aerosols, droplets
 def drop_condensation(particles_list, T_parcel, q_parcel, P_parcel, nt, dt, air_mass_parcel, S_lst, rho_aero,kohler_activation_radius, con_ts, act_ts, evp_ts, dea_ts, switch_kappa_koehler):

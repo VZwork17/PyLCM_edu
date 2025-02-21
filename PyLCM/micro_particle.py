@@ -1,5 +1,3 @@
-import numpy as np
-from matplotlib import pyplot as plt
 import random
 
 from PyLCM.parameters import *
