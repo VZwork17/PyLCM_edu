@@ -1,9 +1,5 @@
-# timestep_routine.py
-# Module for timestep handling
-
 import numpy as np
 import time
-import pylab as pl
 
 from PyLCM.parameters import *
 from PyLCM.micro_particle import *
@@ -52,10 +48,10 @@ def timesteps_function(
         nt = nt_to_top
 
     # Function call of the complete model initialization (model_init) (aerosol initialization included)
-    P_parcel, T_parcel, q_parcel, z_parcel, w_parcel, N_aero, mu_aero, sigma_aero, nt, dt, \
+    P_parcel, T_parcel, q_parcel, z_parcel, w_parcel, wp_parcel, N_aero, mu_aero, sigma_aero, nt, dt, \
     max_z, do_condensation, do_collision, ascending_mode, time_half_wave_parcel, S_lst, display_mode, \
     qa_ts, qc_ts, qr_ts, na_ts, nc_ts, nr_ts, T_parcel_array, P_parcel_array, RH_parcel_array, q_parcel_array, \
-    z_parcel_array, particles_list, spectra_arr, con_ts, act_ts, evp_ts, dea_ts, acc_ts, aut_ts, precip_ts, particles_array, rc_liq_avg_array, rc_liq_std_array,n_particles, TAU_ts_array = \
+    z_parcel_array, wp_parcel_array, particles_list, spectra_arr, con_ts, act_ts, evp_ts, dea_ts, acc_ts, aut_ts, precip_ts, particles_array, rc_liq_avg_array, rc_liq_std_array,n_particles, TAU_ts_array = \
         model_init(
             dt, int(nt), do_condensation, do_collision, n_particles, \
             T_parcel, P_parcel, RH_parcel, w_parcel, z_parcel, max_z, \
@@ -79,13 +75,14 @@ def timesteps_function(
         time = (t+1)*dt
 
         # Parcel ascending
-        z_parcel, T_parcel,P_parcel = ascend_parcel(z_parcel, T_parcel,P_parcel, w_parcel, dt, time,max_z,theta_profiles, time_half_wave_parcel, ascending_mode)
+        z_parcel, T_parcel,P_parcel, wp_parcel = ascend_parcel(z_parcel, T_parcel,P_parcel, w_parcel, wp_parcel, dt, time,max_z,theta_profiles, time_half_wave_parcel, ascending_mode)
         
         if switch_entrainment and (entrainment_start <= time) and  (time < entrainment_end) and (z_parcel < 3000.):
             #Entrainment works only when z < 3000m
             T_parcel, q_parcel = basic_entrainment(dt,z_parcel, T_parcel, q_parcel,P_parcel, entrainment_rate, qv_profiles, theta_profiles)
     
-        rho_parcel, V_parcel, air_mass_parcel =  parcel_rho(P_parcel, T_parcel)
+        #rho_parcel, V_parcel, air_mass_parcel =  parcel_rho(P_parcel, T_parcel)
+        rho_parcel, V_parcel =  parcel_rho(P_parcel, T_parcel)
 
         # Check for and filter out particles of 0 mass/weighting
         particles_list = [particle for particle in particles_list if particle.M != 0 and particle.A != 0]
@@ -125,6 +122,7 @@ def timesteps_function(
         RH_parcel_array[t+1] = RH_parcel
         q_parcel_array[t+1]  = q_parcel
         z_parcel_array[t+1]  = z_parcel
+        wp_parcel_array[t+1]  = wp_parcel
 
         P_parcel_array[t+1] = P_parcel
                 
@@ -149,5 +147,5 @@ def timesteps_function(
     gamma = 7.7 # 13.3
     albedo_array = TAU_ts_array / ( gamma + TAU_ts_array )
 
-    return nt, dt, time_array, T_parcel_array, P_parcel_array, RH_parcel_array, q_parcel_array, z_parcel_array, qa_ts,qc_ts,qr_ts, na_ts,nc_ts,nr_ts, spectra_arr, con_ts, act_ts, evp_ts, dea_ts, acc_ts, aut_ts, precip_ts,particles_array, rc_liq_avg_array, rc_liq_std_array, TAU_ts_array, albedo_array
+    return nt, dt, time_array, T_parcel_array, P_parcel_array, RH_parcel_array, q_parcel_array, z_parcel_array, wp_parcel_array, qa_ts,qc_ts,qr_ts, na_ts, nc_ts, nr_ts, spectra_arr, con_ts, act_ts, evp_ts, dea_ts, acc_ts, aut_ts, precip_ts, particles_array, rc_liq_avg_array, rc_liq_std_array, TAU_ts_array, albedo_array
     
