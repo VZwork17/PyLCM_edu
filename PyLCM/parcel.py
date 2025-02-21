@@ -1,24 +1,21 @@
 import numpy as np
+import random
+import matplotlib.pyplot as plt
 from PyLCM.parameters import *
 from PyLCM.micro_particle import *
 from PyLCM.condensation import *
 from PyLCM.entrainment import *
 
+random.seed(10)
 
 def parcel_rho(P_parcel, T_parcel):
-    from PyLCM.condensation import esatw
-    p_env = P_parcel
-    T_env = T_parcel
-    theta_env = T_parcel * ( p0 / p_env )**( r_a / cp )
-    e_s = esatw(T_parcel)
+    # Computes density and volume of the parcel for given pressure and temperature.
+    rho_parcel = P_parcel / ( r_a * T_parcel ) #  Air density
+    V_parcel   = air_mass_parcel / rho_parcel # (Assumed) volume of parcel for a 100 kg air parcel
     
-    rho_parcel = p_env / ( r_a * T_parcel ) #  Air density
-    V_parcel   = 100.0 / rho_parcel # (Assumed) volume of parcel for a 100 kg air parcel
-    air_mass_parcel = V_parcel * rho_parcel
-    
-    return(rho_parcel, V_parcel, air_mass_parcel) # (Assumed) air mass of parcel
+    return(rho_parcel, V_parcel)
 
-def ascend_parcel(z_parcel, T_parcel,P_parcel,w_parcel,dt, time, max_z,theta_profiles,time_half_wave_parcel=1200.0, ascending_mode='linear', t_start_oscillation=800):
+def ascend_parcel(z_parcel, T_parcel,P_parcel,w_parcel, wp_parcel, dt, time, max_z,theta_profiles,time_half_wave_parcel=1200.0, ascending_mode='linear', t_start_oscillation=800, noise_amplitude=.05):
     # Computes values for the ascending parcel. Three ascending mode options are provided.
     # Users can change the half wavelength of the oscillation (time_half_wave_parcel (s)) and the oscillation start time (t_start_oscillation (s), only relevant for the 'in_cloud_oscillation' case)
     if ascending_mode=='linear':
@@ -67,7 +64,24 @@ def ascend_parcel(z_parcel, T_parcel,P_parcel,w_parcel,dt, time, max_z,theta_pro
         T_env      = theta_env * (P_parcel / p0) ** (r_a / cp)
         P_parcel   = P_parcel - P_parcel * g * dz / ( r_a * T_env )
 
-    return z_parcel, T_parcel, P_parcel
+    elif ascending_mode=='turbulent':
+        # The vertical velocity is subject to AR(1) process.
+        alpha_w = np.exp( - dt / tau_corr )
+
+        wp_parcel = alpha_w * wp_parcel + np.sqrt( 1.0 - alpha_w ** 2 ) * noise_amplitude * random.gauss(0,1)
+        w_turb = w_parcel + wp_parcel
+
+        dz = w_turb * dt
+        z_parcel = z_parcel + dz
+        T_parcel   = T_parcel - dz * g / cp
+
+        #change environmental pressure
+        theta_env  = get_interp1d_var(z_parcel,z_env,theta_profiles)
+        T_env      = theta_env * (P_parcel / p0) ** (r_a / cp)
+        P_parcel   = P_parcel - P_parcel * g * dz / ( r_a * T_env )
+
+
+    return z_parcel, T_parcel, P_parcel, wp_parcel
 
 #Functions to make environmental profiles for three different stability conditions
 def create_env_profiles(T_init, qv_init,z_init,p_env, stability_condition):
