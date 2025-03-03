@@ -68,8 +68,3 @@ seperation_radius_ts = 25.0E-6
 #Parameters for Entrainment. 
 #-------------------------------------------------------
 z_env = np.arange(0, 3001, 10) # vertical levels up to 3000m
-
-#-------------------------------------------------------
-#parameters for turbulent parcel model
-#-------------------------------------------------------
-tau_corr = 20 #0.000000001 # uncorrelated/white noise (20 # Sc 1.6 # Cu )

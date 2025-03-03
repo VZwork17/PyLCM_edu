@@ -14,8 +14,6 @@ from Post_process.analysis import *
 from Post_process.print_plot import *
 
 
-# def timesteps_function(n_particles_widget, P_widget, RH_widget, T_widget, w_widget, nt_widget, dt_widget, rm_spec, ascending_mode_widget, mode_displaytype_widget, z_widget, max_z_widget, Condensation_widget, Collision_widget, mode_aero_init_widget, gridwidget, kohler_activation_radius, switch_kappa_koehler, switch_sedi_removal,entrainment_rate,switch_entrainment,qv_profiles, theta_profiles, entrainment_start, entrainment_end): 
-
 def timesteps_function(
         dt, nt, do_condensation, do_collision, n_particles, \
         T_parcel, P_parcel, RH_parcel, w_parcel, z_parcel, max_z, \
@@ -23,7 +21,7 @@ def timesteps_function(
         mode_aero_init, N_aero, mu_aero, sigma_aero, k_aero, \
         kohler_activation_radius, switch_kappa_koehler, switch_sedi_removal, \
         entrainment_rate, switch_entrainment, entrainment_start, entrainment_end,
-        qv_profiles, theta_profiles
+        qv_profiles, theta_profiles, tau_corr, noise_amplitude
     ):
 
     # # Limit the output by max z or max nt, whichever is smaller
@@ -75,8 +73,8 @@ def timesteps_function(
         time = (t+1)*dt
 
         # Parcel ascending
-        z_parcel, T_parcel,P_parcel, wp_parcel = ascend_parcel(z_parcel, T_parcel,P_parcel, w_parcel, wp_parcel, dt, time,max_z,theta_profiles, time_half_wave_parcel, ascending_mode)
-        
+        z_parcel, T_parcel,P_parcel, wp_parcel = ascend_parcel(z_parcel, T_parcel,P_parcel, w_parcel, wp_parcel, dt, time,max_z,theta_profiles, 
+                                                               time_half_wave_parcel=time_half_wave_parcel, ascending_mode=ascending_mode, tau_corr=tau_corr, noise_amplitude=noise_amplitude) # keywork arguments
         if switch_entrainment and (entrainment_start <= time) and  (time < entrainment_end) and (z_parcel < 3000.):
             #Entrainment works only when z < 3000m
             T_parcel, q_parcel = basic_entrainment(dt,z_parcel, T_parcel, q_parcel,P_parcel, entrainment_rate, qv_profiles, theta_profiles)

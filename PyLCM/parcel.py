@@ -15,7 +15,11 @@ def parcel_rho(P_parcel, T_parcel):
     
     return(rho_parcel, V_parcel)
 
-def ascend_parcel(z_parcel, T_parcel,P_parcel,w_parcel, wp_parcel, dt, time, max_z,theta_profiles,time_half_wave_parcel=1200.0, ascending_mode='linear', t_start_oscillation=800, noise_amplitude=.05):
+def ascend_parcel(z_parcel, T_parcel,P_parcel,w_parcel, wp_parcel, dt, time, max_z,theta_profiles,
+                  time_half_wave_parcel=1200.0, ascending_mode='linear', tau_corr=1.0, noise_amplitude=.01,t_start_oscillation=800):
+    
+    # Very bad testing
+    print(f"time_half_wave_parcel={time_half_wave_parcel}, tau={tau_corr}, noise = {noise_amplitude}")
     # Computes values for the ascending parcel. Three ascending mode options are provided.
     # Users can change the half wavelength of the oscillation (time_half_wave_parcel (s)) and the oscillation start time (t_start_oscillation (s), only relevant for the 'in_cloud_oscillation' case)
     if ascending_mode=='linear':
