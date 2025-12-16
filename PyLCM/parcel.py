@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from PyLCM.parameters import *
 from PyLCM.micro_particle import *
 from PyLCM.condensation import *
@@ -18,56 +19,125 @@ def parcel_rho(P_parcel, T_parcel):
     
     return(rho_parcel, V_parcel, air_mass_parcel) # (Assumed) air mass of parcel
 
-def ascend_parcel(z_parcel, T_parcel,P_parcel,w_parcel,dt, time, max_z,theta_profiles,time_half_wave_parcel=1200.0, ascending_mode='linear', t_start_oscillation=800):
-    # Computes values for the ascending parcel. Three ascending mode options are provided.
-    # Users can change the half wavelength of the oscillation (time_half_wave_parcel (s)) and the oscillation start time (t_start_oscillation (s), only relevant for the 'in_cloud_oscillation' case)
-    if ascending_mode=='linear':
+def ascend_parcel(z_parcel, T_parcel, P_parcel, w_parcel, wp_parcel, dt, time, max_z, theta_profiles,
+                  time_half_wave_parcel=1200.0, ascending_mode='linear', tau_corr=1.0, 
+                  noise_amplitude=0.01, t_start_oscillation=800, rng=None):
+    """
+    Compute parcel ascent for one timestep.
+    
+    Parameters
+    ----------
+    z_parcel : float
+        Parcel altitude (m)
+    T_parcel : float
+        Parcel temperature (K)
+    P_parcel : float
+        Parcel pressure (Pa)
+    w_parcel : float
+        Mean vertical velocity (m/s)
+    wp_parcel : float
+        Perturbation velocity for turbulent mode (m/s)
+    dt : float
+        Timestep (s)
+    time : float
+        Current simulation time (s)
+    max_z : float
+        Maximum altitude (m)
+    theta_profiles : array
+        Potential temperature profile (K)
+    time_half_wave_parcel : float
+        Half wavelength for sine oscillation (s)
+    ascending_mode : str
+        'linear', 'sine', 'in_cloud_oscillation', 'white_noise', or 'turbulent'
+    tau_corr : float
+        Correlation time for turbulent mode (s)
+    noise_amplitude : float
+        Amplitude of stochastic perturbations (m/s)
+    t_start_oscillation : float
+        Start time for oscillations (s)
+    rng : numpy.random.Generator
+        Random number generator
+        
+    Returns
+    -------
+    z_parcel, T_parcel, P_parcel, wp_parcel : floats
+        Updated parcel state and perturbation velocity
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+    
+    if ascending_mode == 'linear':
         # Linear ascending
-        if z_parcel < max_z: 
+        if z_parcel < max_z:
             dz = w_parcel * dt
-            z_parcel   = z_parcel + dz
-            T_parcel   = T_parcel - dz * g / cp
-        #change environmental pressure
-            theta_env  = get_interp1d_var(z_parcel,z_env,theta_profiles)
-            T_env      = theta_env * (P_parcel / p0) ** (r_a / cp)
-            P_parcel   = P_parcel - P_parcel * g * dz / ( r_a * T_env )
-    elif ascending_mode=='sine': 
+            z_parcel = z_parcel + dz
+            T_parcel = T_parcel - dz * g / cp
+            # Change environmental pressure
+            theta_env = get_interp1d_var(z_parcel, z_env, theta_profiles)
+            T_env = theta_env * (P_parcel / p0) ** (r_a / cp)
+            P_parcel = P_parcel - P_parcel * g * dz / (r_a * T_env)
+            
+    elif ascending_mode == 'sine':
         # Sinusoidal oscillation
         w_oscillate = w_parcel * np.pi / 2.0 * np.sin(np.pi * time / time_half_wave_parcel)
-        dz = w_oscillate  * dt
+        dz = w_oscillate * dt
         z_parcel = z_parcel + dz
         if w_parcel > 0:
             T_parcel = T_parcel - dz * g / cp
         else:
             T_parcel = T_parcel + dz * g / cp
-            
-        #change environmental pressure
-        theta_env  = get_interp1d_var(z_parcel,z_env,theta_profiles)
-        T_env      = theta_env * (P_parcel / p0) ** (r_a / cp)
-        P_parcel   = P_parcel - P_parcel * g * dz / ( r_a * T_env )
+        # Change environmental pressure
+        theta_env = get_interp1d_var(z_parcel, z_env, theta_profiles)
+        T_env = theta_env * (P_parcel / p0) ** (r_a / cp)
+        P_parcel = P_parcel - P_parcel * g * dz / (r_a * T_env)
 
-    elif ascending_mode=='in_cloud_oscillation':
+    elif ascending_mode == 'in_cloud_oscillation':
         # The particle rises first linearly. After oscillation start time it starts to oscillate.
-        phase = np.arccos(2/np.pi)
+        phase = np.arccos(2 / np.pi)
         if time < t_start_oscillation:
             dz = w_parcel * dt
-            z_parcel   = z_parcel + dz
-            T_parcel   = T_parcel - dz * g / cp
+            z_parcel = z_parcel + dz
+            T_parcel = T_parcel - dz * g / cp
         else:
-            w_oscillate = w_parcel * np.pi / 2.0 * np.cos(np.pi * (time-t_start_oscillation) / time_half_wave_parcel + phase)
-            dz = w_oscillate  * dt
+            w_oscillate = w_parcel * np.pi / 2.0 * np.cos(np.pi * (time - t_start_oscillation) / time_half_wave_parcel + phase)
+            dz = w_oscillate * dt
             z_parcel = z_parcel + dz
             if w_parcel > 0:
                 T_parcel = T_parcel - dz * g / cp
             else:
                 T_parcel = T_parcel + dz * g / cp
+        # Change environmental pressure
+        theta_env = get_interp1d_var(z_parcel, z_env, theta_profiles)
+        T_env = theta_env * (P_parcel / p0) ** (r_a / cp)
+        P_parcel = P_parcel - P_parcel * g * dz / (r_a * T_env)
+        
+    elif ascending_mode == 'white_noise':
+        # The vertical velocity is subject to white (uncorrelated) noise
+        wp_parcel = noise_amplitude * rng.normal(0, 1)
+        w_turb = w_parcel + wp_parcel
+        dz = w_turb * dt
+        z_parcel = z_parcel + dz
+        T_parcel = T_parcel - dz * g / cp
+        # Change environmental pressure
+        theta_env = get_interp1d_var(z_parcel, z_env, theta_profiles)
+        T_env = theta_env * (P_parcel / p0) ** (r_a / cp)
+        P_parcel = P_parcel - P_parcel * g * dz / (r_a * T_env)
+        
+    elif ascending_mode == 'turbulent':
+        # The vertical velocity is subject to AR(1) process (exponentially correlated noise)
+        # This models turbulent velocity fluctuations with correlation time tau_corr
+        alpha_w = np.exp(-dt / tau_corr)  # AR(1) decay coefficient
+        wp_parcel = alpha_w * wp_parcel + np.sqrt(1.0 - alpha_w ** 2) * noise_amplitude * rng.normal(0, 1)
+        w_turb = w_parcel + wp_parcel
+        dz = w_turb * dt
+        z_parcel = z_parcel + dz
+        T_parcel = T_parcel - dz * g / cp
+        # Change environmental pressure
+        theta_env = get_interp1d_var(z_parcel, z_env, theta_profiles)
+        T_env = theta_env * (P_parcel / p0) ** (r_a / cp)
+        P_parcel = P_parcel - P_parcel * g * dz / (r_a * T_env)
 
-        #change environmental pressure
-        theta_env  = get_interp1d_var(z_parcel,z_env,theta_profiles)
-        T_env      = theta_env * (P_parcel / p0) ** (r_a / cp)
-        P_parcel   = P_parcel - P_parcel * g * dz / ( r_a * T_env )
-
-    return z_parcel, T_parcel, P_parcel
+    return z_parcel, T_parcel, P_parcel, wp_parcel, dz
 
 #Functions to make environmental profiles for three different stability conditions
 def create_env_profiles(T_init, qv_init,z_init,p_env, stability_condition):
