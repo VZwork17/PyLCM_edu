@@ -178,7 +178,7 @@ def create_env_profiles(T_init, qv_init,z_init,p_env, stability_condition):
     ax2.legend(lines + lines2, labels + labels2)
 
     plt.title(stability_condition + " condition")
-    plt.show()
-
+    # plt.show()  # Commented out to avoid blocking batch runs
+    plt.close()  # Close figure to prevent memory buildup
     
     return qv_profiles, theta_profiles, z_env
