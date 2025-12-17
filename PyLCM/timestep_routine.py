@@ -57,11 +57,12 @@ def timesteps_function(
     #                             max_z_widget, mode_aero_init_widget, gridwidget, \
     #                             ascending_mode_widget, mode_displaytype_widget,switch_kappa_koehler)
 
-    # Limit the output by max z or max nt, whichever is smaller
-    time_to_top = (max_z - z_parcel) / w_parcel
-    nt_to_top = time_to_top / dt
-    if nt_to_top < nt:
-        nt = nt_to_top
+    # Don't recalculate nt based on initial w_parcel - this breaks stochastic modes
+    # The loop will exit when z_parcel >= max_z, so nt is just a safety limit
+    # time_to_top = (max_z - z_parcel) / w_parcel
+    # nt_to_top = time_to_top / dt
+    # if nt_to_top < nt:
+    #     nt = nt_to_top
 
     # Function call of the complete model initialization (model_init) (aerosol initialization included)
     P_parcel, T_parcel, q_parcel, z_parcel, w_parcel, wp_parcel, N_aero, mu_aero, sigma_aero, nt, dt, \
@@ -170,7 +171,7 @@ def timesteps_function(
             if (time%5) == 0:
                 animation_call(figure_item, time_array, t, dt, nt,rm_spec, qa_ts, qc_ts, qr_ts, na_ts, nc_ts, nr_ts, T_parcel_array, RH_parcel_array, q_parcel_array, z_parcel_array)
         
-        if z_parcel == max_z:
+        if z_parcel >= max_z:
             break
     
     
