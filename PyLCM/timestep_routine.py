@@ -20,6 +20,7 @@ if _project_root not in sys.path:
 from PyLCM.condensation import drop_condensation  # Standard PyLCM (default)
 # from src.physics.condensation_moist_adiabat import drop_condensation  # Modified: moist adiabat
 # from src.physics.condensation_no_latent_heating import drop_condensation  # Modified: no latent heat
+# NOTE: This import is overridden by set_condensation_module() in model_utils.py during each simulation
 
 from PyLCM.collision import *
 # Optional imports - comment out if dependencies unavailable
@@ -59,10 +60,14 @@ def timesteps_function(
 
     # Don't recalculate nt based on initial w_parcel - this breaks stochastic modes
     # The loop will exit when z_parcel >= max_z, so nt is just a safety limit
-    # time_to_top = (max_z - z_parcel) / w_parcel
-    # nt_to_top = time_to_top / dt
-    # if nt_to_top < nt:
-    #     nt = nt_to_top
+    time_to_top = (max_z - z_parcel) / w_parcel
+    nt_to_top = time_to_top / dt
+    if nt_to_top < nt:
+        nt = nt_to_top
+
+    # Initialize random number generator for turbulent mode
+    if rng is None:
+        rng = np.random.default_rng()
 
     # Function call of the complete model initialization (model_init) (aerosol initialization included)
     P_parcel, T_parcel, q_parcel, z_parcel, w_parcel, wp_parcel, N_aero, mu_aero, sigma_aero, nt, dt, \
@@ -73,12 +78,10 @@ def timesteps_function(
             dt, int(nt), do_condensation, do_collision, n_particles, \
             T_parcel, P_parcel, RH_parcel, w_parcel, z_parcel, max_z, \
             mode_aero_init, N_aero, mu_aero, sigma_aero, k_aero, \
-            ascending_mode, display_mode, switch_kappa_koehler
+            ascending_mode, display_mode, switch_kappa_koehler, rng=rng
         )
     
-    # Initialize random number generator for turbulent mode
-    if rng is None:
-        rng = np.random.default_rng()
+
 
 
 ################################
@@ -120,10 +123,10 @@ def timesteps_function(
             # Call condensation with or without dz_parcel depending on function signature
             try:
                 # Try with dz_parcel for modified physics modules
-                particles_list, T_parcel, q_parcel, S_lst, con_ts[t+1], act_ts[t+1], evp_ts[t+1], dea_ts[t+1] = drop_condensation(particles_list, T_parcel, q_parcel, P_parcel, nt, dt, air_mass_parcel, S_lst, rho_aero,kohler_activation_radius, con_ts[t+1], act_ts[t+1], evp_ts[t+1], dea_ts[t+1],switch_kappa_koehler, dz_parcel=dz_parcel)
+                particles_list, T_parcel, q_parcel, S_lst, con_ts[t+1], act_ts[t+1], evp_ts[t+1], dea_ts[t+1] = drop_condensation(particles_list, T_parcel, q_parcel, P_parcel, t, dt, air_mass_parcel, S_lst, rho_aero,kohler_activation_radius, con_ts[t+1], act_ts[t+1], evp_ts[t+1], dea_ts[t+1],switch_kappa_koehler, dz_parcel=dz_parcel)
             except TypeError:
                 # Fall back to standard PyLCM without dz_parcel
-                particles_list, T_parcel, q_parcel, S_lst, con_ts[t+1], act_ts[t+1], evp_ts[t+1], dea_ts[t+1] = drop_condensation(particles_list, T_parcel, q_parcel, P_parcel, nt, dt, air_mass_parcel, S_lst, rho_aero,kohler_activation_radius, con_ts[t+1], act_ts[t+1], evp_ts[t+1], dea_ts[t+1],switch_kappa_koehler)
+                particles_list, T_parcel, q_parcel, S_lst, con_ts[t+1], act_ts[t+1], evp_ts[t+1], dea_ts[t+1] = drop_condensation(particles_list, T_parcel, q_parcel, P_parcel, t, dt, air_mass_parcel, S_lst, rho_aero,kohler_activation_radius, con_ts[t+1], act_ts[t+1], evp_ts[t+1], dea_ts[t+1],switch_kappa_koehler)
             
             # Convert mass output to per mass per sec.
             con_ts[t+1]  = 1e3 * con_ts[t+1] / air_mass_parcel / dt
@@ -137,7 +140,7 @@ def timesteps_function(
         # Collisional Growth
         if do_collision:
 
-            particles_list, acc_ts[t+1], aut_ts[t+1],precip_ts[t+1] = collection(dt, particles_list,rho_parcel, rho_liq, P_parcel, T_parcel, acc_ts[t+1], aut_ts[t+1],precip_ts[t+1], switch_sedi_removal, z_parcel, max_z, w_parcel)
+            particles_list, acc_ts[t+1], aut_ts[t+1],precip_ts[t+1] = collection(dt, particles_list, rho_parcel, rho_liq, P_parcel, T_parcel, acc_ts[t+1], aut_ts[t+1], precip_ts[t+1], switch_sedi_removal, z_parcel, max_z, w_parcel, rng=rng)
             
             # Convert mass output to per mass per sec.
             acc_ts[t+1]  = 1e3 * acc_ts[t+1] / air_mass_parcel / dt

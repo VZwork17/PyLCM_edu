@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib import pyplot as plt
-import random
 
 from PyLCM.parameters import *
 from PyLCM.parameters import *
@@ -15,5 +14,12 @@ class particles:
         self.Ns     = 1.0 # Aerosol mass
         self.kappa  = 0.5 # kappa parameter
         self.z      = 0.0 # particle vertical location
-    def shuffle(particles_list):
-        random.shuffle(particles_list)
+    def shuffle(particles_list, rng=None):
+        """Deterministically shuffle particles_list using passed RNG. If rng is None, creates a local RNG."""
+        if rng is None:
+            rng = np.random.default_rng()
+        if len(particles_list) <= 1:
+            return
+        # Use rng.permutation to reorder in-place
+        perm = rng.permutation(len(particles_list))
+        particles_list[:] = [particles_list[i] for i in perm]

@@ -13,7 +13,7 @@ def model_init(
         dt, nt, do_condensation, do_collision, n_particles, \
         T_parcel, P_parcel, RH_parcel, w_parcel, z_parcel, max_z, \
         mode_aero_init, N_aero, mu_aero, sigma_aero, k_aero, \
-        ascending_mode, display_mode, switch_kappa_koehler
+        ascending_mode, display_mode, switch_kappa_koehler, rng=None
     ):
 
     # RH to q conversion
@@ -50,7 +50,7 @@ def model_init(
     wp_parcel = 0.0  # Perturbation velocity for turbulent mode
     
     # Aerosol initialization
-    T_parcel, q_parcel, particles_list = aero_init(mode_aero_init, n_particles, P_parcel,z_parcel, T_parcel,q_parcel, N_aero, mu_aero, sigma_aero, rho_aero, k_aero, switch_kappa_koehler)
+    T_parcel, q_parcel, particles_list = aero_init(mode_aero_init, n_particles, P_parcel,z_parcel, T_parcel,q_parcel, N_aero, mu_aero, sigma_aero, rho_aero, k_aero, switch_kappa_koehler, rng=rng)
     
     # Variant for mean radii and std. dev. of cloud+rain droplets only
     rc_liq_avg_array = np.zeros(nt+1)
@@ -98,8 +98,12 @@ def model_init(
     
     return P_parcel, T_parcel, q_parcel, z_parcel, w_parcel, wp_parcel, N_aero, mu_aero, sigma_aero, nt, dt, max_z, do_condensation, do_collision, ascending_mode, time_half_wave_parcel, S_lst, display_mode, qa_ts, qc_ts, qr_ts, na_ts, nc_ts, nr_ts, T_parcel_array, P_parcel_array, RH_parcel_array, q_parcel_array, z_parcel_array, wp_parcel_array, particles_list, spectra_arr, con_ts, act_ts, evp_ts, dea_ts, acc_ts, aut_ts, precip_ts, particles_array, rc_liq_avg_array, rc_liq_std_array,n_particles, TAU_ts_array
 
-def aero_init(mode_aero_init, n_ptcl, P_parcel, z_parcel,T_parcel,q_parcel, N_aero, mu_aero,sigma_aero,rho_aero, k_aero, switch_kappa_koehler):
+def aero_init(mode_aero_init, n_ptcl, P_parcel, z_parcel,T_parcel,q_parcel, N_aero, mu_aero,sigma_aero,rho_aero, k_aero, switch_kappa_koehler, rng=None):
     
+    # Create default RNG if none provided
+    if rng is None:
+        rng = np.random.default_rng()
+
     # Aerosol initialization
     rho_parcel, V_parcel, air_mass_parcel =  parcel_rho(P_parcel, T_parcel)
     
@@ -141,8 +145,9 @@ def aero_init(mode_aero_init, n_ptcl, P_parcel, z_parcel,T_parcel,q_parcel, N_ae
     if mode_aero_init == "Random":
         # Generate log-normal distribution for the modes
         temp_arr = []
+
         for k in range(mode_count):
-            temp_arr.extend(np.random.lognormal(mu_aero[k], sigma_aero[k], n_particles_mode_int[k]))
+            temp_arr.extend(rng.lognormal(mu_aero[k], sigma_aero[k], n_particles_mode_int[k]))
 
         aero_r_seed = np.array(temp_arr)
 
