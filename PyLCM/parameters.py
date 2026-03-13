@@ -44,7 +44,7 @@ x_start_spec = 4.0 / 3.0 * np.pi * rho_liq * ( r_start_spec )**3
 r_end_spec   = 4000.0E-6
 x_end_spec   = 4.0 / 3.0 * np.pi * rho_liq * ( r_end_spec )**3
 
-alpha_spec   = 1.0   # bin spacing: mass(n+1) = mass(n) * 2^alpha_spec
+alpha_spec   = 0.5   # bin spacing: mass(n+1) = mass(n) * 2^alpha_spec
 n_bins  = int( np.log10( x_end_spec / x_start_spec ) / np.log10( 2.0**alpha_spec ) )
 
 n_bins_spec = np.arange(1,n_bins)

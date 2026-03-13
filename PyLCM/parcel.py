@@ -85,7 +85,7 @@ def ascend_parcel(z_parcel, T_parcel, P_parcel, w_parcel, wp_parcel, dt, time, m
         if w_parcel > 0:
             T_parcel = T_parcel - dz * g / cp
         else:
-            T_parcel = T_parcel + dz * g / cp
+            T_parcel = T_parcel + dz * g / cp # does it make sense?
         # Change environmental pressure
         theta_env = get_interp1d_var(z_parcel, z_env, theta_profiles)
         T_env = theta_env * (P_parcel / p0) ** (r_a / cp)
@@ -182,3 +182,42 @@ def create_env_profiles(T_init, qv_init,z_init,p_env, stability_condition):
     plt.close()  # Close figure to prevent memory buildup
     
     return qv_profiles, theta_profiles, z_env
+
+
+def compute_environment_profiles(z, profile_points):
+    """
+    Compute environment potential temperature and specific humidity profiles.
+    
+    Interpolates linearly between given height-value points to create continuous profiles.
+    Matches the output format of create_env_profiles.
+    
+    Parameters
+    ----------
+    z : ndarray
+        Height array [m] where to compute the profiles
+    profile_points : list of tuples
+        List of (height, theta, qv) tuples defining the profile
+        e.g., [(0, 290, 0.008), (400, 290, 0.008), (1400, 291.2, 0.004), (2000, 293.2, 0.001)]
+    
+    Returns
+    -------
+    qv_env : ndarray
+        Environment specific humidity [kg/kg]
+    theta_env : ndarray
+        Environment potential temperature [K]
+    z : ndarray
+        Height array [m]
+    """
+    # Sort points by height
+    profile_points = sorted(profile_points, key=lambda x: x[0])
+    
+    # Extract heights and values
+    z_points = np.array([p[0] for p in profile_points])
+    theta_vals = np.array([p[1] for p in profile_points])
+    qv_vals = np.array([p[2] for p in profile_points])
+    
+    # Interpolate linearly
+    theta_env = np.interp(z, z_points, theta_vals)
+    qv_env = np.interp(z, z_points, qv_vals)
+    
+    return qv_env, theta_env, z
