@@ -1,9 +1,9 @@
-# Module for animated plots using plotly
+import time
+import numpy as np
 from plotly.subplots import make_subplots
 import plotly.graph_objs as go
-import time
 from IPython.display import clear_output
-import numpy as np
+
 
 
 ####################################################################################################################################################################################

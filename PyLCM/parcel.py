@@ -5,19 +5,14 @@ from PyLCM.micro_particle import *
 from PyLCM.condensation import *
 from PyLCM.entrainment import *
 
+random.seed(10)
 
 def parcel_rho(P_parcel, T_parcel):
-    from PyLCM.condensation import esatw
-    p_env = P_parcel
-    T_env = T_parcel
-    theta_env = T_parcel * ( p0 / p_env )**( r_a / cp )
-    e_s = esatw(T_parcel)
+    # Computes density and volume of the parcel for given pressure and temperature.
+    rho_parcel = P_parcel / ( r_a * T_parcel ) #  Air density
+    V_parcel   = air_mass_parcel / rho_parcel # (Assumed) volume of parcel for a 100 kg air parcel
     
-    rho_parcel = p_env / ( r_a * T_parcel ) #  Air density
-    V_parcel   = 100.0 / rho_parcel # (Assumed) volume of parcel for a 100 kg air parcel
-    air_mass_parcel = V_parcel * rho_parcel
-    
-    return(rho_parcel, V_parcel, air_mass_parcel) # (Assumed) air mass of parcel
+    return(rho_parcel, V_parcel)
 
 def ascend_parcel(z_parcel, T_parcel, P_parcel, w_parcel, wp_parcel, dt, time, max_z, theta_profiles,
                   time_half_wave_parcel=1200.0, ascending_mode='linear', tau_corr=1.0, 

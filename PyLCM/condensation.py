@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from PyLCM.parameters import *
 from PyLCM.micro_particle import *

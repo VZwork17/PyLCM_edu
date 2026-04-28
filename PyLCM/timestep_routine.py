@@ -1,6 +1,3 @@
-# timestep_routine.py
-# Module for timestep handling
-
 import numpy as np
 
 from PyLCM.parameters import *
@@ -69,7 +66,8 @@ def timesteps_function(
             #Entrainment works only when z < 3000m
             T_parcel, q_parcel = basic_entrainment(dt,z_parcel, T_parcel, q_parcel,P_parcel, entrainment_rate, qv_profiles, theta_profiles)
     
-        rho_parcel, V_parcel, air_mass_parcel =  parcel_rho(P_parcel, T_parcel)
+        #rho_parcel, V_parcel, air_mass_parcel =  parcel_rho(P_parcel, T_parcel)
+        rho_parcel, V_parcel =  parcel_rho(P_parcel, T_parcel)
 
         # Check for and filter out particles of 0 mass/weighting
         particles_list = [particle for particle in particles_list if particle.M != 0 and particle.A != 0]
@@ -115,6 +113,7 @@ def timesteps_function(
         RH_parcel_array[t+1] = RH_parcel
         q_parcel_array[t+1]  = q_parcel
         z_parcel_array[t+1]  = z_parcel
+        wp_parcel_array[t+1]  = wp_parcel
 
         P_parcel_array[t+1] = P_parcel
                 

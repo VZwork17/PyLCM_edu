@@ -1,5 +1,6 @@
 import numpy as np
 
+air_mass_parcel = 100 # assumed mass of air parcel (kg)
 rho_a = 1.225E-3 #g/cm3
 rho_liq = 1000.0 # density of liquid water (kg/m3)
 rv = 461.0 # specific gas constant water vapor (J/kg/K)
@@ -67,3 +68,8 @@ seperation_radius_ts = 25.0E-6
 #Parameters for Entrainment. 
 #-------------------------------------------------------
 z_env = np.arange(0, 3001, 10) # vertical levels up to 3000m
+
+#-------------------------------------------------------
+#parameters for turbulent parcel model
+#-------------------------------------------------------
+tau_corr = 20 #0.000000001 # uncorrelated/white noise (20 # Sc 1.6 # Cu )
