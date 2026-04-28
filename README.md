@@ -1,15 +1,19 @@
 # PyLCM_parcel
-Lagrangian Cloud Model(LCM) parcel model for education purposes.
+Lagrangian Cloud Model(LCM) parcel model for education purposes. 
 
 > **Note**: This is the `perturbed-physics-modifications` branch. See changes below.
 
 ## Branch: perturbed-physics-modifications
 
-This branch contains extensions for the PyLCM-perturbed-physics project:
-- **ascend_parcel()** now returns `dz` (actual height displacement per timestep)
-- **timestep_routine.py** uses returned `dz` for accurate condensation calculations
-- **aero_init.py** initializes `wp_parcel` for turbulent/stochastic ascending modes
-- Supports 5 ascending modes: linear, turbulent, sine, in-cloud oscillation, white noise
+This branch contains modified code to run different versions of the model (turbulent ascent and decoupled microphysics). The main changes are:
+
+### Turbulent ascent
+- **ascend_parcel()** now includes a turbulent and white noise mode
+- **timestep_routine.py()** has been changed to accommodate the additional input parameters for turbulent ascending modes
+- **aero_init.py** initializes `wp_parcel` for turbulent ascending modes
+### Decoupled microphysics
+- this is solved with an additional module `src/physics/condensation_moist_adiabat.py`
+
 
 ## Installation
 1. install anaconda3 for python / jupyter
