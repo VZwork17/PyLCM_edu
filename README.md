@@ -9,10 +9,12 @@ This branch contains modified code to run different versions of the model (turbu
 
 ### Turbulent ascent
 - **ascend_parcel()** now includes a turbulent and white noise mode
-- **timestep_routine.py()** has been changed to accommodate the additional input parameters for turbulent ascending modes
+- **timestep_routine.py** has been changed to accommodate the additional input parameters for turbulent ascending modes
 - **aero_init.py** initializes `wp_parcel` for turbulent ascending modes
 ### Decoupled microphysics
 - this is solved with an additional module `src/physics/condensation_moist_adiabat.py`
+
+Additionally, now the model builds (piece-wise) environment profiles from height-value tuples with `compute_environment_profiles()` as alternative to the presets in `create_env_profiles()`
 
 
 ## Installation
