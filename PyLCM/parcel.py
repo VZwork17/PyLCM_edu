@@ -5,8 +5,6 @@ from PyLCM.micro_particle import *
 from PyLCM.condensation import *
 from PyLCM.entrainment import *
 
-random.seed(10)
-
 def parcel_rho(P_parcel, T_parcel):
     # Computes density and volume of the parcel for given pressure and temperature.
     rho_parcel = P_parcel / ( r_a * T_parcel ) #  Air density
