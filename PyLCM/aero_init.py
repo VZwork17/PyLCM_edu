@@ -46,7 +46,7 @@ def model_init(
     
     # Further initialization
     dz=0
-    rho_parcel, V_parcel, air_mass_parcel =  parcel_rho(P_parcel, T_parcel)
+    rho_parcel, V_parcel =  parcel_rho(P_parcel, T_parcel)
     wp_parcel = 0.0  # Perturbation velocity for turbulent mode
     
     # Aerosol initialization
