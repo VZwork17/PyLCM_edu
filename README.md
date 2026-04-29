@@ -1,10 +1,6 @@
 # PyLCM_parcel
 Lagrangian Cloud Model(LCM) parcel model for education purposes.
 
-> **Note**: This is the `perturbed-physics-modifications` branch. See changes below.
-
-## Branch: perturbed-physics-modifications
-
 This branch contains extensions for the PyLCM-perturbed-physics project:
 - **ascend_parcel()** now returns `dz` (actual height displacement per timestep)
 - **timestep_routine.py** uses returned `dz` for accurate condensation calculations
