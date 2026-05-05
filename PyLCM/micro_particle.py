@@ -13,6 +13,7 @@ class particles:
         self.Ns     = 1.0 # Aerosol mass
         self.kappa  = 0.5 # kappa parameter
         self.z      = 0.0 # particle vertical location
+        
     def shuffle(particles_list, rng=None):
         """Deterministically shuffle particles_list using passed RNG. If rng is None, creates a local RNG."""
         if rng is None:
